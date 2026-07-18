@@ -3,239 +3,862 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crustify — Inventory Calculator</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Crustify Inventory</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --red:#8b0000; --red-bright:#c81010; --gold:#ffd700; --gold-dk:#e6b800;
-  --success:#059669; --warning:#d97706; --danger:#dc2626; --info:#2563eb;
-  --dark:#111827; --mid:#6b7280; --light:#f3f4f6; --border:#e5e7eb;
-  --radius:14px; --radius-sm:8px; --shadow:0 2px 12px rgba(0,0,0,.07);
+:root {
+  --crustify-red:        #8b0000;
+  --crustify-red-bright: #c81010;
+  --crustify-red-lt:     #fff0f0;
+  --crustify-gold:       #ffd700;
+  --crustify-gold-dk:    #e6b800;
+  --crustify-gold-lt:    #fffbe6;
+  --crustify-black:      #1a1a1a;
+  --crustify-white:      #ffffff;
+  --logo-url: url('https://res.cloudinary.com/xol0kklw/image/upload/f_auto/q_auto/WhatsApp_Image_2026-07-06_at_5.36.33_PM_akosfz.jpg');
+  --success:     #059669;
+  --warning:     #d97706;
+  --danger:      #dc2626;
+  --info:        #2563eb;
+  --dark:        #111827;
+  --mid:         #6b7280;
+  --light:       #f3f4f6;
+  --white:       #ffffff;
+  --border:      #e5e7eb;
+  --radius:      14px;
+  --radius-sm:   8px;
+  --shadow:      0 2px 12px rgba(0,0,0,.07);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,.12);
+  --purple:      #7c3aed;
+  --purple-lt:   #f5f3ff;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:#f8f9fb;color:var(--dark);font-size:14px;line-height:1.5;padding-bottom:60px;}
-h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;}
-
-.header{
-  background:linear-gradient(135deg,var(--red) 0%,var(--red-bright) 60%,#f37021 100%);
-  padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-  position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(139,0,0,.3);
-}
-.header h1{color:#fff;font-size:20px;letter-spacing:-.4px;}
-.header .sub{color:rgba(255,215,0,.8);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:2px;}
-.reset-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,215,0,.35);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
-.reset-btn:hover{background:rgba(255,255,255,.25);}
-
-.nav{background:#fff;border-bottom:2px solid var(--border);padding:0 24px;position:sticky;top:66px;z-index:90;overflow-x:auto;}
-.nav-inner{display:flex;max-width:1200px;margin:0 auto;}
-.nav-btn{padding:14px 18px;border:none;background:transparent;font-weight:700;font-size:13px;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px;}
-.nav-btn:hover{color:var(--red);}
-.nav-btn.active{color:var(--red);border-bottom-color:var(--gold);}
-
-.main{max-width:1200px;margin:0 auto;padding:24px;}
+body{font-family:'Inter',sans-serif;background:#f8f9fb;color:var(--dark);font-size:14px;line-height:1.5;}
+.header{background:linear-gradient(135deg, var(--crustify-red) 0%, var(--crustify-red-bright) 50%, #f37021 100%);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(139,0,0,.3);}
+.logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;}
+.logo em{color:rgba(255,215,0,.8);font-style:normal;font-weight:400;font-size:11px;display:block;letter-spacing:1px;text-transform:uppercase;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.sync-pill{position:fixed;bottom:20px;right:20px;padding:8px 14px;border-radius:50px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-lg);z-index:9999;transition:all .3s;}
+.sync-pill.ok{background:var(--success);color:#fff;}
+.sync-pill.busy{background:var(--warning);color:#fff;}
+.sync-pill.err{background:var(--danger);color:#fff;}
+.nav{background:#fff;border-bottom:2px solid var(--border);padding:0 24px;position:sticky;top:57px;z-index:150;}
+.nav-inner{display:flex;gap:0;overflow-x:auto;}
+.nav-btn{padding:14px 18px;border:none;background:transparent;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:all .2s;}
+.nav-btn:hover{color:var(--crustify-red);}
+.nav-btn.active{color:var(--crustify-red);border-bottom-color:var(--crustify-gold);}
+.main{max-width:1400px;margin:0 auto;padding:24px;}
 .tab{display:none;}
 .tab.active{display:block;}
-
-.card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-.card-title{font-size:16px;font-weight:700;}
-.card-title i{color:var(--red);margin-right:6px;}
-
-.btn{padding:9px 16px;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:filter .15s,transform .1s;}
+.btn{padding:9px 16px;border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;white-space:nowrap;}
 .btn:hover{filter:brightness(1.08);}
 .btn:active{transform:scale(.97);}
-.btn-primary{background:var(--red);color:#fff;}
+.btn-primary{background:var(--crustify-red);color:#fff;box-shadow:0 3px 0 #5c0000;}
+.btn-primary:active{box-shadow:0 1px 0 #5c0000;}
 .btn-success{background:var(--success);color:#fff;}
 .btn-danger{background:var(--danger);color:#fff;}
+.btn-ghost{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,215,0,.3);}
+.btn-ghost:hover{background:rgba(255,255,255,.28);border-color:rgba(255,215,0,.6);}
 .btn-outline{background:#fff;color:var(--dark);border:2px solid var(--border);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;filter:none!important;}
 .btn-sm{padding:6px 11px;font-size:12px;}
-.btn-icon{width:32px;height:32px;padding:0;justify-content:center;}
-.btn:disabled{opacity:.45;cursor:not-allowed;}
-
-.form-group{margin-bottom:14px;}
-.form-label{display:block;font-weight:600;font-size:12px;margin-bottom:5px;color:var(--dark);}
-.form-input,.form-select{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;background:#fff;}
-.form-input:focus,.form-select:focus{outline:none;border-color:var(--red);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
-
+.btn-icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:var(--radius-sm);}
+.btn-purple{background:var(--purple);color:#fff;}
+.card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.card-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;color:var(--dark);}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
+.stat{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-left:4px solid var(--border);transition:transform .2s;}
+.stat:hover{transform:translateY(-2px);}
+.stat.ok{border-left-color:var(--success);}
+.stat.warn{border-left-color:var(--warning);}
+.stat.bad{border-left-color:var(--danger);}
+.stat.brand{border-left-color:var(--crustify-red);}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mid);margin-bottom:6px;}
+.stat-val{font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:700;color:var(--dark);}
+.dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;}
+.dash-col-charts{display:flex;flex-direction:column;gap:20px;}
+.dash-col-side{display:flex;flex-direction:column;gap:20px;}
+.chart-card{height:280px;display:flex;flex-direction:column;}
+.chart-card canvas{flex:1;max-height:220px;}
+@media(max-width:900px){ .dash-grid{grid-template-columns:1fr;} }
 .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 th{background:#f8f9fb;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mid);white-space:nowrap;}
-td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+td{padding:10px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#fafafa;}
-
 .badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;display:inline-block;white-space:nowrap;}
 .badge-ok{background:#d1fae5;color:#065f46;}
 .badge-warn{background:#fef3c7;color:#92400e;}
 .badge-bad{background:#fee2e2;color:#991b1b;}
 .badge-info{background:#dbeafe;color:#1e40af;}
-
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
-.stat{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border-left:4px solid var(--border);}
-.stat.brand{border-left-color:var(--red);}
-.stat.ok{border-left-color:var(--success);}
-.stat.bad{border-left-color:var(--danger);}
-.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mid);margin-bottom:6px;}
-.stat-val{font-size:22px;font-weight:800;}
-
-.empty{text-align:center;padding:50px 20px;color:var(--mid);}
-.empty i{font-size:44px;color:var(--border);display:block;margin-bottom:12px;}
-
+.badge-gray{background:#f3f4f6;color:#374151;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-weight:600;font-size:12px;margin-bottom:5px;color:var(--dark);}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;transition:border-color .2s;background:#fff;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--crustify-red);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:500;padding:16px;backdrop-filter:blur(4px);}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .2s ease;}
+.modal-lg{max-width:820px;}
+@keyframes modalIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:10;}
+.modal-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--mid);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background .15s;}
+.modal-close:hover{background:var(--light);}
+.modal-body{padding:20px;}
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;}
+.stock-num{font-weight:700;font-size:13px;}
+.stock-low{color:var(--danger);}
 .unit-pill{background:#f3f4f6;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
-.closing-input{width:100px;text-align:right;padding:6px 8px;border:2px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;}
-.closing-input:focus{outline:none;border-color:var(--red);}
-.closing-input.pos-input{border-color:#c81010;background:#fff0f0;}
-
-.grn-row-grid, .cl-row-note{display:grid;gap:6px;}
-.hint{font-size:12px;color:var(--mid);margin-bottom:12px;}
-.hint-box{font-size:12px;color:var(--mid);background:#f8f9fb;border-left:3px solid var(--border);padding:10px 14px;border-radius:6px;margin-top:12px;}
-
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:13px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:all .3s ease;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.2);}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast.err{background:var(--danger);}
-
-.diff-badge{display:inline-block;padding:4px 9px;border-radius:8px;font-weight:800;font-size:12px;min-width:60px;text-align:center;border:2px solid transparent;}
-.diff-match{background:#d1fae5;color:#065f46;border-color:#a7f3d0;}
-.diff-over{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
-.diff-under{background:#e0f2fe;color:#075985;border-color:#bae6fd;}
-
-@media(max-width:768px){
-  .main{padding:16px;}
-  .form-row,.form-row-3{grid-template-columns:1fr;}
-  .stats{grid-template-columns:repeat(2,1fr);}
-}
+.alert-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:10px;margin-bottom:8px;border-left:4px solid;}
+.alert-row.warn{background:#fffbeb;border-color:var(--warning);}
+.alert-row.bad{background:#fef2f2;border-color:var(--danger);}
+.alert-row.info{background:#eff6ff;border-color:#3b82f6;}
+.alert-row.variance{background:#ecfeff;border-color:#0891b2;}
+.progress{height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;transition:width .3s;}
+.progress-fill.hi{background:var(--success);}
+.progress-fill.mid{background:var(--warning);}
+.progress-fill.lo{background:var(--danger);}
+.toast{position:fixed;top:20px;right:20px;background:#fff;border-radius:12px;padding:13px 18px;box-shadow:var(--shadow-lg);display:none;align-items:center;gap:10px;max-width:380px;z-index:9999;border-left:4px solid var(--success);animation:toastIn .3s ease;}
+.toast.show{display:flex;}
+.toast.err{border-left-color:var(--danger);}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--crustify-red);background:var(--crustify-red-lt);}
+.drop-zone i{font-size:36px;color:var(--mid);display:block;margin-bottom:10px;}
+.drop-zone:hover i{color:var(--crustify-red);}
+.grn-card{border:2px solid #d1fae5;border-radius:var(--radius);background:linear-gradient(135deg,#f0fdf4,#fff);padding:18px;margin-bottom:14px;}
+.grn-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #d1fae5;}
+.closing-input{width:90px;text-align:right;padding:6px 8px;border:2px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;}
+.closing-input:focus{outline:none;border-color:var(--crustify-red);}
+.day-badge{display:inline-flex;align-items:center;gap:5px;background:var(--crustify-gold-lt);color:var(--crustify-red);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.empty{text-align:center;padding:60px 20px;color:var(--mid);}
+.empty i{font-size:52px;color:var(--border);display:block;margin-bottom:14px;}
+.sql-block{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:16px;font-family:monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin-top:12px;white-space:pre;}
+.edit-phys-input {width: 90px; text-align: right; padding: 6px 10px;border: 2px solid var(--purple); border-radius: 6px;font-size: 13px; font-weight: 600;background: #faf5ff;transition: border-color .2s, background .2s;}
+.edit-phys-input:focus {outline: none;border-color: var(--purple);background: #ede9fe;}
+.edit-phys-input.inp-opening {border-color: #3b82f6 !important;background: #eff6ff !important;}
+.edit-phys-input.inp-opening:focus { background: #dbeafe !important; }
+.edit-phys-input.inp-grn {border-color: #059669 !important;background: #f0fdf4 !important;}
+.edit-phys-input.inp-grn:focus { background: #dcfce7 !important; }
+.edit-phys-input.inp-cpu {border-color: #d97706 !important;background: #fffbeb !important;}
+.edit-phys-input.inp-cpu:focus { background: #fef3c7 !important; }
+.edit-phys-input.inp-pos {border-color: #0891b2 !important;background: #ecfeff !important;}
+.edit-phys-input.inp-pos:focus { background: #cffafe !important; }
+.edit-mode-banner {background: linear-gradient(135deg, #ede9fe, #faf5ff);border: 2px solid var(--purple);border-radius: 10px;padding: 12px 16px;margin-bottom: 12px;display: flex;align-items: center;gap: 10px;font-size: 13px;font-weight: 600;color: var(--purple);}
+.edit-row-changed td { background: #faf5ff !important; }
+.calc-badge {display: inline-block;padding: 5px 10px;border-radius: 8px;font-weight: 800;font-size: 13px;min-width: 72px;text-align: center;transition: all 0.2s;}
+.calc-badge-avail    { background: #f1f5f9; color: #1e293b; border: 2px solid #cbd5e1; }
+.calc-badge-consumed { background: #fef2f2; color: var(--danger); border: 2px solid #fecaca; }
+.edit-legend {display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px;padding: 10px 14px; background: #f8f9fb; border-radius: 8px;font-size: 11px; font-weight: 600; color: var(--mid);}
+.edit-legend-item { display: flex; align-items: center; gap: 5px; }
+.edit-legend-dot  { width: 10px; height: 10px; border-radius: 3px; }
+.diff-badge{display:inline-block;padding:5px 10px;border-radius:8px;font-weight:800;font-size:13px;min-width:72px;text-align:center;border:2px solid transparent;}
+.diff-match{ background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
+.diff-over { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+.diff-under{ background:#e0f2fe; color:#075985; border-color:#bae6fd; }
+.pos-input{width:90px;text-align:right;padding:6px 8px;border:2px solid #0891b2;border-radius:6px;font-size:13px;font-weight:600;background:#ecfeff;}
+.pos-input:focus{outline:none;background:#cffafe;}
+@media(max-width:768px){.main{padding:16px;}.form-row,.form-row-3{grid-template-columns:1fr;}.stats{grid-template-columns:repeat(2,1fr);}.stat-val{font-size:20px;}}
+/* login removed — app loads directly */
 </style>
 </head>
 <body>
+  
 
+<!-- TOAST -->
+<div id="toast" class="toast">
+  <i id="toast-icon" class="fas fa-check-circle" style="color:var(--success);font-size:18px;flex-shrink:0;"></i>
+  <span id="toast-msg">Done</span>
+</div>
+
+<!-- SYNC PILL -->
+<div id="sync-pill" class="sync-pill busy">
+  <i class="fas fa-spinner fa-spin"></i>
+  <span id="sync-txt">Connecting…</span>
+</div>
+
+<!-- HEADER -->
 <header class="header">
-  <div>
-    <h1><i class="fas fa-calculator"></i> Crustify Calculator</h1>
-    <div class="sub">GRN · Night Closing · Consumption — no login, nothing saved to a server</div>
+  <div class="logo">
+    Crustify Inventory
+    <em>Restaurant Stock Management</em>
   </div>
-  <button class="reset-btn" onclick="resetAll()"><i class="fas fa-undo"></i> Reset everything</button>
+  <div class="header-actions">
+  <button class="btn btn-ghost btn-sm" id="btn-manage-users" style="display:none;" onclick="openUserManager()">
+    <i class="fas fa-users-cog"></i> Manage Users
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="openM('m-templates')">
+    <i class="fas fa-download"></i> Templates
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="openOpeningStock()">
+    <i class="fas fa-box-open"></i> Opening Stock
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="openM('m-sql')">
+    <i class="fas fa-database"></i> Backup / Restore
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i> Logout
+  </button>
+</div>
 </header>
 
+<!-- NAV -->
 <nav class="nav">
   <div class="nav-inner">
-    <button class="nav-btn active" data-tab="t-ingredients" onclick="switchTab(this)"><i class="fas fa-boxes"></i> Ingredients</button>
-    <button class="nav-btn" data-tab="t-grn" onclick="switchTab(this)"><i class="fas fa-truck-loading"></i> GRN</button>
-    <button class="nav-btn" data-tab="t-closing" onclick="switchTab(this)"><i class="fas fa-moon"></i> Night Closing</button>
-    <button class="nav-btn" data-tab="t-consumption" onclick="switchTab(this)"><i class="fas fa-fire"></i> Consumption</button>
+    <button class="nav-btn active" data-tab="t-dash" onclick="switchTab(this)">
+      <i class="fas fa-chart-pie"></i> Dashboard
+    </button>
+    <button class="nav-btn" data-tab="t-ingredients" onclick="switchTab(this)">
+      <i class="fas fa-boxes"></i> Ingredients
+    </button>
+    <button class="nav-btn" data-tab="t-batches" onclick="switchTab(this)">
+  <i class="fas fa-blender"></i> Batches
+</button>
+    <button class="nav-btn" data-tab="t-grn" onclick="switchTab(this)">
+      <i class="fas fa-truck-loading"></i> GRN
+    </button>
+    <button class="nav-btn" data-tab="t-closing" onclick="switchTab(this)">
+      <i class="fas fa-moon"></i> Night Closing
+    </button>
+    <button class="nav-btn" data-tab="t-consumption" onclick="switchTab(this)">
+      <i class="fas fa-fire"></i> Consumption
+    </button>
+    <button class="nav-btn" data-tab="t-expenses" onclick="switchTab(this)">
+      <i class="fas fa-money-bill-wave"></i> Expenses
+    </button>
   </div>
 </nav>
 
+
+<!-- MAIN -->
 <main class="main">
-
-  <!-- ============ INGREDIENTS (setup) ============ -->
-  <div id="t-ingredients" class="tab active">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><i class="fas fa-boxes"></i>Ingredients</span>
+    <div id="t-batches" class="tab">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-blender"></i> Batch Recipes</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select class="form-select" id="batch-type-filter" onchange="renderBatches()" style="max-width:160px;">
+          <option value="">All Types</option>
+          <option value="dough">Dough</option>
+          <option value="sauce">Sauce</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openBatchModal()"><i class="fas fa-plus"></i> New Batch</button>
       </div>
-      <p class="hint">Add every ingredient you want to track. Everything below (GRN, Night Closing, Consumption) works off this list — nothing here is saved anywhere, it only lives in this browser tab.</p>
+    </div>
+    <div id="batch-list"><div class="empty"><i class="fas fa-blender"></i><p>No batch recipes yet</p></div></div>
+  </div>
+</div>
 
-      <div class="form-row-3" style="align-items:end;">
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Name</label>
-          <input class="form-input" id="ing-name" placeholder="e.g. Chicken Breast" onkeydown="if(event.key==='Enter')addIngredient()">
+<div id="t-dash" class="tab active">
+  <div class="stats" id="dash-stats">
+    <div class="stat brand"><div class="stat-label">Total Ingredients</div><div class="stat-val" id="s-total">—</div></div>
+    <div class="stat warn"><div class="stat-label">Low Stock</div><div class="stat-val" id="s-low">—</div></div>
+    <div class="stat bad"><div class="stat-label">Stock Out</div><div class="stat-val" id="s-out">—</div></div>
+    <div class="stat ok"><div class="stat-label">Inventory Value</div><div class="stat-val" id="s-val">—</div></div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-col-charts">
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-chart-pie"></i> Stock Health</span></div>
+        <canvas id="chart-stock-health"></canvas>
+      </div>
+      <div class="card" id="low-stock-card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-arrow-down"></i> Low / Out of Stock — Active Items</span>
+          <button class="btn btn-outline btn-sm" id="low-stock-toggle" onclick="toggleLowStockList()" style="display:none;">Show all</button>
         </div>
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Unit</label>
-          <select class="form-select" id="ing-unit">
-            <option>kg</option><option>g</option><option>l</option><option>ml</option>
-            <option>pcs</option><option>pkt</option><option>box</option><option>bottle</option>
-          </select>
+        <div id="low-stock-list"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-chart-line"></i> Consumption Cost — Last 14 Days</span></div>
+        <canvas id="chart-consumption-trend"></canvas>
+      </div>
+    </div>
+
+    <div class="dash-col-side">
+      <div class="card" id="dash-insights-card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-lightbulb" style="color:var(--warning);"></i> Today &amp; Ahead</span>
         </div>
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Cost / Unit (Rs)</label>
-          <input class="form-input" id="ing-cost" type="number" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter')addIngredient()">
+
+        <div id="today-activity-summary" style="margin-bottom:18px;"></div>
+
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong style="font-size:13px;color:var(--dark);"><i class="fas fa-clock" style="color:#3b82f6;"></i> Approaching Reorder Point</strong>
+            <button class="btn btn-outline btn-sm" id="approaching-toggle" onclick="toggleApproaching()" style="display:none;">Show all</button>
+          </div>
+          <div id="approaching-list"></div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong style="font-size:13px;color:var(--dark);"><i class="fas fa-exclamation-circle" style="color:#0891b2;"></i> Unexplained Variance</strong>
+            <button class="btn btn-outline btn-sm" id="variance-toggle" onclick="toggleVariance()" style="display:none;">Show all</button>
+          </div>
+          <div id="variance-list"></div>
         </div>
       </div>
-      <div class="form-row" style="align-items:end;margin-top:2px;">
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Opening Stock (starting quantity you already have)</label>
-          <input class="form-input" id="ing-stock" type="number" step="0.001" placeholder="0.000" onkeydown="if(event.key==='Enter')addIngredient()">
-        </div>
-        <div class="form-group" style="margin:0;display:flex;align-items:end;">
-          <button class="btn btn-primary" style="width:100%;" onclick="addIngredient()"><i class="fas fa-plus"></i> Add Ingredient</button>
-        </div>
+
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-layer-group"></i> Inventory Value by Category</span></div>
+        <canvas id="chart-category-value"></canvas>
       </div>
 
-      <div class="tbl-wrap" style="margin-top:16px;">
+      <div class="card chart-card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-fire"></i> Top 5 Consumed Ingredients (30d)</span></div>
+        <canvas id="chart-top-consumed"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-moon"></i> Recent Closings</span></div>
+        <div id="dash-recent-closing"><div class="empty"><i class="fas fa-moon"></i><p>No closing records yet</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="t-ingredients" class="tab">
+
+  <div class="card" style="border:2px solid #dbeafe;background:linear-gradient(135deg,#eff6ff,#fff);">
+    <div class="card-header">
+      <span class="card-title" style="color:#1d4ed8;"><i class="fas fa-cloud-upload-alt"></i> Upload Ingredients Excel</span>
+      <button class="btn btn-sm" style="background:var(--info);color:#fff;" onclick="tog('ing-upload-body')"><i class="fas fa-chevron-down"></i> Upload</button>
+    </div>
+    <div id="ing-upload-body" style="display:none;">
+      <p style="font-size:12px;color:var(--mid);margin-bottom:12px;">
+        Columns: <strong>ingredient_name, category, unit, current_stock, min_level, cost_per_unit, supplier, location</strong>
+        — download the template from the Templates button in the header.
+      </p>
+      <div class="drop-zone" onclick="document.getElementById('ing-upload-file').click()">
+        <i class="fas fa-file-upload"></i>
+        <strong>Click to upload Ingredients Excel</strong>
+        <input type="file" id="ing-upload-file" accept=".xlsx,.xls" style="display:none;" onchange="handleIngredientsUploadFile(event)">
+      </div>
+      <div id="ing-upload-preview" style="display:none;margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-boxes"></i> Ingredients</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="exportIngredients()"><i class="fas fa-file-upload"></i> Export</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddIngredient()"><i class="fas fa-plus"></i> Add</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input class="form-input" id="ing-search" placeholder="Search…" oninput="renderIngredients()" style="max-width:220px;">
+      <select class="form-select" id="ing-cat" onchange="renderIngredients()" style="max-width:180px;">
+        <option value="">All Categories</option>
+      </select>
+      <select class="form-select" id="ing-status" onchange="renderIngredients()" style="max-width:160px;">
+        <option value="">All Status</option>
+        <option value="ok">Normal</option>
+        <option value="low">Low Stock</option>
+        <option value="out">Stock Out</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ingredient</th><th>Category</th><th>Stock</th><th>Min</th>
+            <th>Unit</th><th>Cost/Unit</th><th>Value</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="ing-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="t-grn" class="tab">
+
+  <div class="card" style="border:2px solid #d1fae5;background:linear-gradient(135deg,#f0fdf4,#fff);">
+    <div class="card-header">
+      <span class="card-title" style="color:#059669;"><i class="fas fa-cloud-upload-alt"></i> Upload GRN Excel</span>
+      <button class="btn btn-success btn-sm" onclick="tog('grn-upload-body')"><i class="fas fa-chevron-down"></i> Upload</button>
+    </div>
+    <div id="grn-upload-body" style="display:none;">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">GRN Date (Business Day)</label>
+          <input class="form-input" type="date" id="quick-grn-date">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Supplier</label>
+          <input class="form-input" type="text" id="quick-grn-supplier" placeholder="Supplier name">
+        </div>
+      </div>
+      <div class="drop-zone" onclick="document.getElementById('quick-grn-file').click()">
+        <i class="fas fa-file-upload"></i>
+        <strong>Click to upload GRN (Excel or PDF)</strong>
+        <input type="file" id="quick-grn-file" accept=".xlsx,.xls,.pdf" style="display:none;" onchange="handleGRNUpload(event)">
+      </div>
+      <div id="grn-preview" style="display:none;margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-truck-loading"></i> GRN Records</span>
+      <button class="btn btn-primary btn-sm" onclick="openGRNManual()"><i class="fas fa-plus"></i> New GRN</button>
+    </div>
+    <div class="filters">
+      <input class="form-input" type="date" id="grn-filter-date" onchange="renderGRN()" style="max-width:180px;">
+      <input class="form-input" id="grn-filter-sup" placeholder="Filter supplier…" oninput="renderGRN()" style="max-width:200px;">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('grn-filter-date').value='';renderGRN();">Clear</button>
+    </div>
+    <div id="grn-list"><div class="empty"><i class="fas fa-truck"></i><p>No GRN records yet</p></div></div>
+  </div>
+</div>
+
+<div id="t-closing" class="tab">
+
+  <div class="card" style="border:2px solid #fde68a;background:linear-gradient(135deg,#fffbeb,#fff);">
+    <div class="card-header">
+      <span class="card-title" style="color:#b45309;"><i class="fas fa-cloud-upload-alt"></i> Upload Closing Excel</span>
+      <button class="btn btn-sm" style="background:var(--warning);color:#fff;" onclick="tog('closing-upload-body')"><i class="fas fa-chevron-down"></i> Upload</button>
+    </div>
+    <div id="closing-upload-body" style="display:none;">
+      <p style="font-size:12px;color:var(--mid);margin-bottom:12px;">
+        Excel columns: <strong>ingredient_name, physical_count</strong> (that's it — we calculate the rest)
+      </p>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Business Day</label>
+          <input class="form-input" type="date" id="quick-closing-date">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Closed By</label>
+          <input class="form-input" type="text" id="quick-closing-by" placeholder="Your name">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Shift Start</label>
+          <input class="form-input" type="datetime-local" id="quick-closing-window-start">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Shift End / Closing Cutoff</label>
+          <input class="form-input" type="datetime-local" id="quick-closing-cutoff">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:10px;">
+        POS sales between Shift Start and Shift End are matched — even past midnight, and even if a day was skipped.
+      </div>
+      <div class="drop-zone" onclick="document.getElementById('quick-closing-file').click()">
+        <i class="fas fa-file-upload"></i>
+        <strong>Click to upload Closing Excel</strong>
+        <input type="file" id="quick-closing-file" accept=".xlsx,.xls" style="display:none;" onchange="handleClosingUpload(event)">
+      </div>
+      <div id="closing-preview" style="display:none;margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-moon"></i> Night Closing</span>
+      <button class="btn btn-primary btn-sm" onclick="openManualClosing()"><i class="fas fa-clipboard-check"></i> Manual Count</button>
+    </div>
+    <div class="filters">
+      <input class="form-input" type="date" id="cl-filter-date" onchange="renderClosingReport()" style="max-width:180px;">
+      <button class="btn btn-outline btn-sm" onclick="exportClosingReport()"><i class="fas fa-file-upload"></i> Export</button>
+    </div>
+    <div id="closing-report">
+      <div class="empty"><i class="fas fa-moon"></i><p>Select a date to view closing report</p></div>
+    </div>
+  </div>
+
+  <div class="card" id="closing-history-card">
+    <div class="card-header"><span class="card-title">Closing History</span></div>
+    <div id="closing-history-list"><div class="empty"><i class="fas fa-history"></i><p>No closing history</p></div></div>
+  </div>
+</div>
+
+<div id="t-consumption" class="tab">
+
+  <div class="stats" id="cons-stats">
+    <div class="stat brand"><div class="stat-label">Total Days</div><div class="stat-val" id="cs-days">—</div></div>
+    <div class="stat bad"><div class="stat-label">Total Consumed Cost</div><div class="stat-val" id="cs-total">—</div></div>
+    <div class="stat warn"><div class="stat-label">Avg Daily Cost</div><div class="stat-val" id="cs-avg">—</div></div>
+    <div class="stat ok"><div class="stat-label">Top Item</div><div class="stat-val" id="cs-top" style="font-size:14px;padding-top:4px;">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-fire" style="color:--brand: #8b0000;;"></i> Consumption Report</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="exportConsumptionReport()"><i class="fas fa-file-excel"></i> Export</button>
+      </div>
+    </div>
+    <div class="filters">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">FROM</label>
+        <input class="form-input" type="datetime-local" id="cons-from" onchange="renderConsumption()" style="max-width:200px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">TO</label>
+        <input class="form-input" type="datetime-local" id="cons-to" onchange="renderConsumption()" style="max-width:200px;">
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <button class="btn btn-outline btn-sm" onclick="setConsRange(7)">Last 7 days</button>
+        <button class="btn btn-outline btn-sm" onclick="setConsRange(30)">Last 30 days</button>
+        <button class="btn btn-outline btn-sm" onclick="setConsRange(0)">All</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end;margin-left:auto;">
+        <button class="btn btn-sm" id="cons-view-item" style="background:--brand: #8b0000;;color:#fff;" onclick="switchConsView('item')">By Ingredient</button>
+        <button class="btn btn-outline btn-sm" id="cons-view-day" onclick="switchConsView('day')">By Day</button>
+      </div>
+    </div>
+
+    <div id="cons-by-item">
+      <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Unit</th><th style="text-align:right;">Cost/Unit</th><th style="text-align:right;">Current Stock</th><th style="text-align:right;">Stock Value</th><th></th></tr></thead>
-          <tbody id="ing-tbody"></tbody>
+          <thead>
+  <tr>
+    <th>Ingredient</th>
+    <th>Category</th>
+    <th style="text-align:right;">Total Consumed</th>
+    <th style="text-align:right;">POS Consumed</th>
+    <th style="text-align:center;">Difference</th>
+    <th>Unit</th>
+    <th style="text-align:right;">Avg Cost/Unit</th>
+    <th style="text-align:right;">Total Cost</th>
+    <th style="text-align:right;">% of Total</th>
+    <th>Days</th>
+  </tr>
+</thead>
+          <tbody id="cons-item-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="cons-by-day" style="display:none;">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Business Day</th>
+              <th>Closed By</th>
+              <th style="text-align:right;">Items Consumed</th>
+              <th style="text-align:right;">Total Cost</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cons-day-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ============ GRN ============ -->
-  <div id="t-grn" class="tab">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><i class="fas fa-truck-loading"></i>New GRN (Goods Received)</span>
-      </div>
-      <p class="hint">Log what came in today. Confirming a GRN adds the quantity to that ingredient's current stock.</p>
+</div>
 
-      <div class="form-row" style="margin-bottom:6px;">
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Date</label>
-          <input class="form-input" type="date" id="grn-date">
-        </div>
-        <div class="form-group" style="margin:0;">
-          <label class="form-label">Supplier</label>
-          <input class="form-input" type="text" id="grn-supplier" placeholder="Supplier name">
-        </div>
-      </div>
+<div id="t-expenses" class="tab">
 
-      <div style="margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center;">
-        <strong style="font-size:13px;">Items</strong>
-        <button class="btn btn-outline btn-sm" onclick="addGRNRow()"><i class="fas fa-plus"></i> Add Row</button>
-      </div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;padding:8px;background:#f8f9fb;border-radius:8px;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;">
-        <div>Ingredient</div><div>Qty</div><div>Unit Cost</div><div>Total</div><div></div>
-      </div>
-      <div id="grn-rows"></div>
+  <div class="stats" id="exp-stats">
+    <div class="stat brand"><div class="stat-label">Total Days</div><div class="stat-val" id="ex-days">—</div></div>
+    <div class="stat bad"><div class="stat-label">Total Expenses</div><div class="stat-val" id="ex-total">—</div></div>
+    <div class="stat warn"><div class="stat-label">Avg Daily Spend</div><div class="stat-val" id="ex-avg">—</div></div>
+    <div class="stat ok"><div class="stat-label">Top Category</div><div class="stat-val" id="ex-top" style="font-size:14px;padding-top:4px;">—</div></div>
+  </div>
 
-      <div style="background:#f0fdf4;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:2px solid #d1fae5;margin-top:14px;">
-        <span style="font-size:13px;color:#059669;font-weight:600;">Grand Total</span>
-        <span id="grn-total" style="font-size:22px;font-weight:800;color:#059669;">Rs 0.00</span>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-money-bill-wave"></i> Till Cash Expenses</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="exportExpenses()"><i class="fas fa-file-excel"></i> Export</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddExpense()"><i class="fas fa-plus"></i> Add Expense</button>
       </div>
-
-      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="confirmGRN()"><i class="fas fa-check"></i> Confirm GRN &amp; Add to Stock</button>
     </div>
-
-    <div class="card">
-      <div class="card-header"><span class="card-title"><i class="fas fa-list"></i>GRN Records (this session)</span></div>
-      <div id="grn-list"><div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div></div>
+    <div class="filters">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">FROM</label>
+        <input class="form-input" type="date" id="exp-from" onchange="renderExpenses()" style="max-width:160px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:4px;">TO</label>
+        <input class="form-input" type="date" id="exp-to" onchange="renderExpenses()" style="max-width:160px;">
+      </div>
+      <select class="form-select" id="exp-cat-filter" onchange="renderExpenses()" style="max-width:180px;">
+        <option value="">All Categories</option>
+        <option value="utilities">Utilities</option>
+        <option value="rent">Rent</option>
+        <option value="maintenance">Maintenance & Repairs</option>
+        <option value="transport">Transport / Fuel</option>
+        <option value="wages">Staff / Wages</option>
+        <option value="cleaning">Cleaning Supplies</option>
+        <option value="marketing">Marketing</option>
+        <option value="misc">Miscellaneous</option>
+        <option value="other">Other</option>
+      </select>
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <button class="btn btn-outline btn-sm" onclick="setExpRange(7)">Last 7 days</button>
+        <button class="btn btn-outline btn-sm" onclick="setExpRange(30)">Last 30 days</button>
+        <button class="btn btn-outline btn-sm" onclick="setExpRange(0)">All</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Category</th><th>Description</th>
+            <th style="text-align:right;">Amount</th><th>Paid By</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="exp-tbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ============ NIGHT CLOSING ============ -->
-  <div id="t-closing" class="tab">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><i class="fas fa-moon"></i>Night Closing — Physical Count</span>
-      </div>
-      <p class="hint">Available = opening stock + today's GRN. Enter what you actually counted — consumption and cost are calculated automatically. Leave blank to assume zero consumption.</p>
+</div>
 
-      <div class="form-row" style="margin-bottom:6px;">
+
+</main>
+<div class="overlay" id="m-add-ingredient">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="ing-modal-title">Add Ingredient</span>
+      <button class="modal-close" onclick="closeM('m-add-ingredient')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ing-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input class="form-input" id="ing-name" placeholder="e.g. Chicken Breast">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-select" id="ing-cat-inp">
+            <option value="meat">Meat & Poultry</option>
+            <option value="chicken">Chicken</option>
+            <option value="dairy">Dairy & Cheese</option>
+            <option value="cheese">Cheese</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="bread">Bread & Buns</option>
+            <option value="sauce">Sauces</option>
+            <option value="spices">Spices & Herbs</option>
+            <option value="oil">Oils & Fats</option>
+            <option value="flour">Flour & Dry</option>
+            <option value="frozen">Frozen Items</option>
+            <option value="beverages">Beverages</option>
+            <option value="packaging">Packaging</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Unit *</label>
+          <select class="form-select" id="ing-unit">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="l">l</option>
+            <option value="ml">ml</option>
+            <option value="pcs">pcs</option>
+            <option value="pkt">pkt</option>
+            <option value="box">box</option>
+            <option value="bottle">bottle</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cost Per Unit (Rs) *</label>
+          <input class="form-input" id="ing-cost" type="number" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Current Stock *</label>
+          <input class="form-input" id="ing-stock" type="number" step="0.001" placeholder="0.000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Level (Alert)</label>
+          <input class="form-input" id="ing-min" type="number" step="0.001" placeholder="0.000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <input class="form-input" id="ing-supplier" placeholder="Supplier name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input class="form-input" id="ing-location" placeholder="Cold Storage A">
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px;" onclick="saveIngredient()">
+        <i class="fas fa-save"></i> Save Ingredient
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-grn">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title">New GRN</span>
+      <button class="modal-close" onclick="closeM('m-grn')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:14px;">
         <div class="form-group" style="margin:0;">
-          <label class="form-label">Date</label>
+          <label class="form-label">Business Day *</label>
+          <input class="form-input" type="date" id="grn-date">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Supplier *</label>
+          <input class="form-input" type="text" id="grn-supplier" placeholder="Supplier name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Invoice / Reference #</label>
+        <input class="form-input" id="grn-invoice" placeholder="Optional">
+      </div>
+
+      <div style="margin:16px 0 10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:13px;">Items</strong>
+          <button class="btn btn-outline btn-sm" onclick="addGRNRow()"><i class="fas fa-plus"></i> Add Row</button>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;padding:8px;background:#f8f9fb;border-radius:8px;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;">
+          <div>Ingredient</div><div>Supplier</div><div>Qty</div><div>Unit Cost</div><div>Total</div><div></div>
+        </div>
+        <div id="grn-rows" style="max-height:320px;overflow-y:auto;"></div>
+      </div>
+
+      <div style="background:#f0fdf4;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:2px solid #d1fae5;">
+        <span style="font-size:13px;color:#059669;font-weight:600;">Grand Total</span>
+        <span id="grn-total" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#059669;">Rs 0.00</span>
+      </div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="grn-notes" rows="2" placeholder="Optional notes"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px;" onclick="saveGRN()">
+        <i class="fas fa-save"></i> Save GRN
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-batch">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title" id="batch-modal-title">New Batch</span>
+      <button class="modal-close" onclick="closeM('m-batch')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="batch-edit-id">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Batch Name *</label>
+          <input class="form-input" id="batch-name" placeholder="e.g. Dough Batch">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Batch Type *</label>
+          <select class="form-select" id="batch-type-inp">
+            <option value="dough">Dough</option>
+            <option value="sauce">Sauce</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Output Ingredient * <span style="font-weight:400;color:var(--mid);">(what this batch produces)</span></label>
+          <select class="form-select" id="batch-output-ingredient">
+            <option value="">— Select ingredient —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Yield per Batch *</label>
+          <input class="form-input" id="batch-output-qty" type="number" step="0.001" placeholder="e.g. 5 (kg)">
+        </div>
+      </div>
+      <div style="background:#eff6ff;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#1e40af;">
+        💡 Create an ingredient like "Fresh Dough" or "Pizza Sauce" first (category: General, unit: kg) if it doesn't exist yet — that's what gets stocked and drawn down when pizzas sell.
+      </div>
+
+      <div style="margin:16px 0 10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:13px;">Materials</strong>
+          <button class="btn btn-outline btn-sm" onclick="addBatchRow()"><i class="fas fa-plus"></i> Add Row</button>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:6px;padding:8px;background:#f8f9fb;border-radius:8px;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;">
+          <div>Material</div><div>UOM</div><div>Price</div><div>Portion</div><div>Cost</div><div></div>
+        </div>
+        <div id="batch-rows" style="max-height:320px;overflow-y:auto;"></div>
+      </div>
+
+      <div style="background:#f0fdf4;border-radius:10px;padding:14px;border:2px solid #d1fae5;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;">
+        <div><div style="font-size:11px;color:var(--mid);">Total Price</div><div id="batch-total-price" style="font-weight:800;font-size:16px;">Rs 0.00</div></div>
+        <div><div style="font-size:11px;color:var(--mid);">Total Portion</div><div id="batch-total-portion" style="font-weight:800;font-size:16px;">0.000</div></div>
+        <div><div style="font-size:11px;color:var(--mid);">Total Cost</div><div id="batch-total-cost" style="font-weight:800;font-size:16px;color:var(--success);">Rs 0.00</div></div>
+      </div>
+      <div style="text-align:right;margin-top:10px;font-weight:800;font-size:18px;color:var(--success);">
+        Per Kg: <span id="batch-per-kg">Rs 0.00</span>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="saveBatch()">
+        <i class="fas fa-save"></i> Save Batch
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-closing">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title">Night Closing — Manual Count</span>
+      <button class="modal-close" onclick="closeM('m-closing')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Business Day *</label>
           <input class="form-input" type="date" id="cl-date">
         </div>
         <div class="form-group" style="margin:0;">
-          <label class="form-label">Closed By</label>
+          <label class="form-label">Closed By *</label>
           <input class="form-input" type="text" id="cl-by" placeholder="Your name">
         </div>
       </div>
-
-      <div class="tbl-wrap" style="margin-top:10px;">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Shift Start — when operations began *</label>
+          <input class="form-input" type="datetime-local" id="cl-window-start">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Shift End / Closing Cutoff — exact date &amp; time *</label>
+          <input class="form-input" type="datetime-local" id="cl-cutoff">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:10px;">
+        POS sales between Shift Start and Shift End are matched exactly — covers overnight operations and skipped days correctly.
+      </div>
+      <p style="font-size:12px;color:var(--mid);margin-bottom:10px;">
+        Leave physical count blank = assume no consumption (available = closing stock).
+      </p>
+      <input class="form-input" id="cl-search" placeholder="Search ingredient…" oninput="filterClosingTable()" style="margin-bottom:10px;">
+      <div style="max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;">
         <table>
           <thead>
             <tr>
@@ -244,476 +867,260 @@ tr:hover td{background:#fafafa;}
               <th style="text-align:center;">GRN Today (+)</th>
               <th style="text-align:center;">Available</th>
               <th style="text-align:center;">Physical Count</th>
-              <th style="text-align:center;">Consumed</th>
-              <th style="text-align:right;">Cost</th>
+              <th>Unit</th>
             </tr>
           </thead>
           <tbody id="cl-tbody"></tbody>
         </table>
       </div>
-
-      <div style="background:#fef2f2;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:2px solid #fecaca;margin-top:14px;">
-        <span style="font-size:13px;color:var(--danger);font-weight:600;">Total Consumption Cost</span>
-        <span id="cl-total" style="font-size:22px;font-weight:800;color:var(--danger);">Rs 0.00</span>
-      </div>
-
-      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="confirmClosing()"><i class="fas fa-moon"></i> Confirm Night Closing</button>
-      <div class="hint-box">Confirming sets each ingredient's current stock to the physical count you entered — that becomes tomorrow's opening stock.</div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><span class="card-title"><i class="fas fa-history"></i>Closing History (this session)</span></div>
-      <div id="closing-list"><div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="saveManualClosing()">
+        <i class="fas fa-moon"></i> Save Night Closing
+      </button>
     </div>
   </div>
+</div>
 
-  <!-- ============ CONSUMPTION ============ -->
-  <div id="t-consumption" class="tab">
-    <div class="stats">
-      <div class="stat brand"><div class="stat-label">Closings Recorded</div><div class="stat-val" id="cs-days">0</div></div>
-      <div class="stat bad"><div class="stat-label">Total Consumption Cost</div><div class="stat-val" id="cs-total">Rs 0.00</div></div>
-      <div class="stat"><div class="stat-label">Avg per Closing</div><div class="stat-val" id="cs-avg">Rs 0.00</div></div>
-      <div class="stat ok"><div class="stat-label">Top Ingredient</div><div class="stat-val" id="cs-top" style="font-size:14px;padding-top:4px;">—</div></div>
+<div class="overlay" id="m-opening">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title"><i class="fas fa-box-open"></i> Set Opening Stock</span>
+      <button class="modal-close" onclick="closeM('m-opening')">&times;</button>
     </div>
+    <div class="modal-body">
+      <div style="background:#dbeafe;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#1e40af;line-height:1.7;">
+        <strong>When to use:</strong> Start of month, or first time setup.<br>
+        After that, opening stock auto-updates every night from Night Closing.
+      </div>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">As of Date</label>
+          <input class="form-input" type="date" id="op-date">
+        </div>
+        <div>
+          <label class="form-label">Search</label>
+          <input class="form-input" id="op-search" placeholder="Search ingredient…" oninput="filterOpeningTable()">
+        </div>
+      </div>
+      <div style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;">
+        <table>
+          <thead><tr><th>Ingredient</th><th>Unit</th><th style="text-align:right;">Opening Stock</th><th style="text-align:right;">Min Level</th></tr></thead>
+          <tbody id="op-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;padding:14px;background:#fffbeb;border-radius:10px;border:2px solid #fde68a;">
+        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:10px;">
+          <i class="fas fa-bell"></i> Bulk Set Min Levels (Alert Thresholds)
+        </div>
+        <p style="font-size:11px;color:var(--mid);margin-bottom:10px;">
+          Items with 0 min level will always show as "Stock Out". Set a realistic minimum so alerts are meaningful.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <select class="form-select" id="bulk-min-cat" style="max-width:180px;font-size:12px;">
+            <option value="">All Categories</option>
+          </select>
+          <input class="form-input" type="number" id="bulk-min-val" placeholder="Min level value" step="0.001" style="max-width:160px;font-size:12px;">
+          <button class="btn btn-sm" style="background:var(--warning);color:#fff;" onclick="applyBulkMinLevel()">
+            <i class="fas fa-bolt"></i> Apply to Category
+          </button>
+        </div>
+        <p style="font-size:11px;color:var(--mid);">Or edit min levels individually in the Opening Stock table above (add a Min Level column below).</p>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="saveOpeningStock()">
+        <i class="fas fa-save"></i> Save Opening Stock & Min Levels
+      </button>
+    </div>
+  </div>
+</div>
 
-    <div class="card">
-      <div class="card-header"><span class="card-title"><i class="fas fa-fire"></i>Consumption by Ingredient</span></div>
-      <p class="hint">Totals across every Night Closing confirmed in this session.</p>
+<div class="overlay" id="m-templates">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title"><i class="fas fa-download"></i> Download Templates</span>
+      <button class="modal-close" onclick="closeM('m-templates')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--mid);font-size:13px;margin-bottom:18px;">Download, fill in your data, then upload via the Upload buttons.</p>
+      <div style="display:grid;gap:12px;">
+
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">Ingredients Template</div>
+            <div style="font-size:12px;color:var(--mid);">Master ingredient list with cost and stock levels</div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="dlTemplate('ingredients')"><i class="fas fa-download"></i> Download</button>
+        </div>
+
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">Opening Stock Template</div>
+            <div style="font-size:12px;color:var(--mid);">Set stock levels at start of month</div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="dlTemplate('opening')"><i class="fas fa-download"></i> Download</button>
+        </div>
+
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">GRN Template</div>
+            <div style="font-size:12px;color:var(--mid);">Daily goods receipt — upload at noon</div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="dlTemplate('grn')"><i class="fas fa-download"></i> Download</button>
+        </div>
+
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">Night Closing Template</div>
+            <div style="font-size:12px;color:var(--mid);">Physical count sheet — just ingredient + count</div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="dlTemplate('closing')"><i class="fas fa-download"></i> Download</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="m-expense">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="exp-modal-title">Add Expense</span>
+      <button class="modal-close" onclick="closeM('m-expense')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="exp-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date *</label>
+          <input class="form-input" type="date" id="exp-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-select" id="exp-cat">
+            <option value="utilities">Utilities</option>
+            <option value="rent">Rent</option>
+            <option value="maintenance">Maintenance & Repairs</option>
+            <option value="transport">Transport / Fuel</option>
+            <option value="wages">Staff / Wages</option>
+            <option value="cleaning">Cleaning Supplies</option>
+            <option value="marketing">Marketing</option>
+            <option value="misc">Miscellaneous</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <input class="form-input" id="exp-desc" placeholder="e.g. Gas cylinder refill">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Amount (Rs) *</label>
+          <input class="form-input" id="exp-amount" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Paid By</label>
+          <input class="form-input" id="exp-paidby" placeholder="Cashier / staff name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="exp-notes" rows="2" placeholder="Optional"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px;" onclick="saveExpense()">
+        <i class="fas fa-save"></i> Save Expense
+      </button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="m-users">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title"><i class="fas fa-users-cog"></i> Manage Users</span>
+      <button class="modal-close" onclick="closeM('m-users')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#dbeafe;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#1e40af;">
+        <strong>Role</strong> is just a display label now. Actual access is controlled per-person using the checkboxes below (for new users) or the <strong>Access</strong> button (for existing users).
+      </div>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">New Username</label>
+          <input class="form-input" id="nu-username" placeholder="e.g. sara_cashier">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="nu-password" type="text" placeholder="Set a password">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role Label (for display only)</label>
+        <select class="form-select" id="nu-role">
+          <option value="cashier">Cashier</option>
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div style="background:#f8f9fb;border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;text-transform:uppercase;">Access — check what this person can see</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+          <label><input type="checkbox" id="nu-perm-dash" checked> Dashboard</label>
+          <label><input type="checkbox" id="nu-perm-ingredients" checked> Ingredients</label>
+          <label><input type="checkbox" id="nu-perm-grn" checked> GRN</label>
+          <label><input type="checkbox" id="nu-perm-closing" checked> Night Closing</label>
+          <label><input type="checkbox" id="nu-perm-consumption" checked> Consumption</label>
+          <label><input type="checkbox" id="nu-perm-manageusers"> Manage Users</label>
+          <label><input type="checkbox" id="nu-perm-batches" checked> Batches</label>
+          <label><input type="checkbox" id="nu-perm-expenses" checked> Expenses</label>
+          <label><input type="checkbox" id="nu-perm-delete"> 🔒 Can Delete Records (GRN/Closing/Batch)</label>
+          <label><input type="checkbox" id="nu-perm-closinghistory" checked> 📊 Can View Closing History (costs)</label>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:20px;" onclick="createUser()">
+        <i class="fas fa-user-plus"></i> Create User
+      </button>
       <div class="tbl-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Ingredient</th>
-              <th style="text-align:right;">Total Consumed</th>
-              <th>Unit</th>
-              <th style="text-align:right;">Avg Cost/Unit</th>
-              <th style="text-align:right;">Total Cost</th>
-              <th style="text-align:right;">% of Total</th>
-              <th>Closings</th>
-            </tr>
-          </thead>
-          <tbody id="cons-tbody"></tbody>
+          <thead><tr><th>Username</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <tbody id="users-tbody"></tbody>
         </table>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="card">
-      <div class="card-header"><span class="card-title"><i class="fas fa-calendar-day"></i>Consumption by Day</span></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>Closed By</th><th style="text-align:right;">Items Consumed</th><th style="text-align:right;">Total Cost</th></tr></thead>
-          <tbody id="cons-day-tbody"></tbody>
-        </table>
+<div class="overlay" id="m-sql">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <span class="modal-title"><i class="fas fa-database"></i> Backup / Restore Data</span>
+      <button class="modal-close" onclick="closeM('m-sql')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fffbeb;border-radius:10px;padding:14px;margin-bottom:18px;font-size:13px;color:#92400e;border:2px solid #fde68a;">
+        <strong>Offline mode:</strong> everything is saved only in this browser (localStorage). Clearing browser data, using a different browser/device, or private/incognito mode will lose it. Download a backup regularly, and re-import it if you switch devices or clear your browser.
+      </div>
+      <div style="display:grid;gap:12px;">
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">Download Backup</div>
+            <div style="font-size:12px;color:var(--mid);">Save all data (ingredients, GRN, closings, batches, expenses, users) as a JSON file</div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="exportAllData()"><i class="fas fa-download"></i> Download</button>
+        </div>
+        <div style="border:2px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="font-weight:700;margin-bottom:4px;">Restore from Backup</div>
+          <div style="font-size:12px;color:var(--mid);margin-bottom:10px;">Upload a previously downloaded backup JSON file. This replaces all current data.</div>
+          <input type="file" id="restore-file-input" accept=".json" style="display:none;" onchange="importAllData(event)">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('restore-file-input').click()"><i class="fas fa-upload"></i> Choose Backup File</button>
+        </div>
+        <div style="border:2px solid #fecaca;border-radius:10px;padding:16px;background:#fef2f2;">
+          <div style="font-weight:700;margin-bottom:4px;color:#991b1b;">Reset All Data</div>
+          <div style="font-size:12px;color:var(--mid);margin-bottom:10px;">Wipes everything in this browser and reloads the default ingredient list. Cannot be undone — download a backup first.</div>
+          <button class="btn btn-danger btn-sm" onclick="resetAllData()"><i class="fas fa-trash-alt"></i> Reset Everything</button>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-</main>
+<script src="script.js"></script>
 
-<div class="toast" id="toast"><span id="toast-msg"></span></div>
-
-<script>
-// ─────────────────────────────────────────────
-// STATE — everything lives only in this tab's memory
-// ─────────────────────────────────────────────
-let ingredients = [];   // {id, name, unit, costPerUnit, currentStock}
-let grnRecords  = [];   // {id, date, supplier, items:[{ingId,name,unit,qty,unitCost,total}], grandTotal}
-let closings    = [];   // {id, date, closedBy, items:[{ingId,name,unit,opening,grnToday,available,physical,consumed,costPerUnit,cost}], totalCost}
-
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function safe(v,d=0){ const n=parseFloat(v); return isNaN(n)?d:n; }
-function fmtCurrency(n){ return 'Rs ' + (safe(n)).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtNum(n,dp=3){ return safe(n).toFixed(dp); }
-function fmtDate(d){ if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-
-let _toastTimer=null;
-function toast(msg,type='ok'){
-  const el=document.getElementById('toast'), m=document.getElementById('toast-msg');
-  m.textContent=msg;
-  el.className='toast show'+(type==='err'?' err':'');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
-}
-
-function switchTab(btn){
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(btn.dataset.tab).classList.add('active');
-  if(btn.dataset.tab==='t-grn') renderGRNIngredientOptions();
-  if(btn.dataset.tab==='t-closing') generateClosingTable();
-  if(btn.dataset.tab==='t-consumption') renderConsumption();
-}
-
-function resetAll(){
-  if(!confirm('Clear all ingredients, GRN records and closings? This cannot be undone.')) return;
-  ingredients=[]; grnRecords=[]; closings=[];
-  renderIngredients();
-  document.getElementById('grn-rows').innerHTML='';
-  document.getElementById('grn-list').innerHTML='<div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div>';
-  document.getElementById('closing-list').innerHTML='<div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div>';
-  addGRNRow();
-  generateClosingTable();
-  renderConsumption();
-  toast('Everything cleared');
-}
-
-// ─────────────────────────────────────────────
-// INGREDIENTS
-// ─────────────────────────────────────────────
-function addIngredient(){
-  const name = document.getElementById('ing-name').value.trim();
-  if(!name){ toast('Enter an ingredient name','err'); return; }
-  const rec = {
-    id: uid(), name,
-    unit: document.getElementById('ing-unit').value,
-    costPerUnit: safe(document.getElementById('ing-cost').value),
-    currentStock: safe(document.getElementById('ing-stock').value)
-  };
-  ingredients.push(rec);
-  ingredients.sort((a,b)=>a.name.localeCompare(b.name));
-  document.getElementById('ing-name').value='';
-  document.getElementById('ing-cost').value='';
-  document.getElementById('ing-stock').value='';
-  document.getElementById('ing-name').focus();
-  renderIngredients();
-  toast('✅ '+name+' added');
-}
-
-function removeIngredient(id){
-  const ing = ingredients.find(i=>i.id===id);
-  if(!ing) return;
-  if(!confirm('Remove "'+ing.name+'"? This won\'t affect GRN or closings already recorded.')) return;
-  ingredients = ingredients.filter(i=>i.id!==id);
-  renderIngredients();
-}
-
-function renderIngredients(){
-  const tbody = document.getElementById('ing-tbody');
-  if(!ingredients.length){
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--mid);">No ingredients added yet</td></tr>';
-    return;
-  }
-  tbody.innerHTML = ingredients.map(i=>{
-    const val = safe(i.currentStock)*safe(i.costPerUnit);
-    return `<tr>
-      <td style="font-weight:600;">${i.name}</td>
-      <td><span class="unit-pill">${i.unit}</span></td>
-      <td style="text-align:right;">${fmtCurrency(i.costPerUnit)}</td>
-      <td style="text-align:right;font-weight:700;">${fmtNum(i.currentStock)}</td>
-      <td style="text-align:right;">${fmtCurrency(val)}</td>
-      <td><button class="btn btn-sm btn-icon" style="background:#fee2e2;color:#991b1b;" onclick="removeIngredient('${i.id}')"><i class="fas fa-trash"></i></button></td>
-    </tr>`;
-  }).join('');
-}
-
-// ─────────────────────────────────────────────
-// GRN
-// ─────────────────────────────────────────────
-function ingredientOptionsHTML(selectedId){
-  return '<option value="">Select ingredient</option>' + ingredients.map(i=>
-    `<option value="${i.id}" data-unit="${i.unit}" data-cost="${i.costPerUnit}"${i.id===selectedId?' selected':''}>${i.name} (${i.unit})</option>`
-  ).join('');
-}
-
-function renderGRNIngredientOptions(){
-  document.querySelectorAll('#grn-rows .grn-sel').forEach(sel=>{
-    const cur = sel.value;
-    sel.innerHTML = ingredientOptionsHTML(cur);
-  });
-}
-
-function addGRNRow(){
-  if(!ingredients.length){ toast('Add at least one ingredient first','err'); return; }
-  const row = document.createElement('div');
-  row.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;margin-top:6px;align-items:center;';
-  row.innerHTML = `
-    <select class="form-select grn-sel" onchange="grnRowChange(this)" style="font-size:12px;">${ingredientOptionsHTML('')}</select>
-    <input class="form-input grn-qty" type="number" step="0.001" placeholder="0.000" oninput="updateGRNRowTotal(this)" style="font-size:12px;text-align:right;">
-    <input class="form-input grn-ucost" type="number" step="0.01" placeholder="0.00" oninput="updateGRNRowTotal(this)" style="font-size:12px;text-align:right;">
-    <div class="grn-line" style="font-weight:700;font-size:13px;text-align:right;padding-right:4px;">Rs 0.00</div>
-    <button class="btn btn-icon" style="background:#fee2e2;color:#991b1b;" onclick="removeGRNRow(this)"><i class="fas fa-trash"></i></button>
-  `;
-  document.getElementById('grn-rows').appendChild(row);
-}
-
-function grnRowChange(sel){
-  const ing = ingredients.find(i=>i.id===sel.value);
-  if(ing){
-    const row = sel.closest('div');
-    row.querySelector('.grn-ucost').value = ing.costPerUnit;
-    updateGRNRowTotal(row.querySelector('.grn-qty'));
-  }
-}
-function updateGRNRowTotal(inp){
-  const row = inp.closest('div');
-  const qty = safe(row.querySelector('.grn-qty').value);
-  const ucost = safe(row.querySelector('.grn-ucost').value);
-  row.querySelector('.grn-line').textContent = fmtCurrency(qty*ucost);
-  updateGRNGrandTotal();
-}
-function removeGRNRow(btn){
-  const rows = document.querySelectorAll('#grn-rows > div');
-  if(rows.length<=1){ toast('Need at least one row','err'); return; }
-  btn.closest('div').remove();
-  updateGRNGrandTotal();
-}
-function updateGRNGrandTotal(){
-  let total=0;
-  document.querySelectorAll('#grn-rows .grn-line').forEach(el=>{
-    total += parseFloat(el.textContent.replace('Rs ','').replace(/,/g,''))||0;
-  });
-  document.getElementById('grn-total').textContent = fmtCurrency(total);
-}
-
-function confirmGRN(){
-  const date = document.getElementById('grn-date').value || todayStr();
-  const supplier = document.getElementById('grn-supplier').value.trim();
-  if(!supplier){ toast('Enter a supplier name','err'); return; }
-
-  const rows = document.querySelectorAll('#grn-rows > div');
-  const items = [];
-  rows.forEach(row=>{
-    const ingId = row.querySelector('.grn-sel').value;
-    const qty = safe(row.querySelector('.grn-qty').value);
-    const ucost = safe(row.querySelector('.grn-ucost').value);
-    if(!ingId || qty<=0) return;
-    const ing = ingredients.find(i=>i.id===ingId);
-    if(!ing) return;
-    items.push({ingId, name:ing.name, unit:ing.unit, qty, unitCost:ucost, total:qty*ucost});
-  });
-  if(!items.length){ toast('Add at least one item with a quantity','err'); return; }
-
-  const grandTotal = items.reduce((s,i)=>s+i.total,0);
-  grnRecords.unshift({id:uid(), date, supplier, items, grandTotal});
-
-  // add qty to stock, weighted-average the cost
-  items.forEach(it=>{
-    const ing = ingredients.find(i=>i.id===it.ingId);
-    if(!ing) return;
-    const oldStock = safe(ing.currentStock), oldCost = safe(ing.costPerUnit);
-    const totalQty = oldStock + it.qty;
-    ing.costPerUnit = totalQty>0 ? ((oldStock*oldCost)+(it.qty*it.unitCost))/totalQty : it.unitCost;
-    ing.currentStock = totalQty;
-  });
-
-  document.getElementById('grn-supplier').value='';
-  document.getElementById('grn-rows').innerHTML='';
-  addGRNRow();
-  updateGRNGrandTotal();
-  renderIngredients();
-  renderGRNList();
-  toast(`✅ GRN saved · ${items.length} items · ${fmtCurrency(grandTotal)}`);
-}
-
-function renderGRNList(){
-  const cont = document.getElementById('grn-list');
-  if(!grnRecords.length){
-    cont.innerHTML = '<div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div>';
-    return;
-  }
-  cont.innerHTML = grnRecords.map(g=>{
-    const rows = g.items.map(i=>`<tr><td style="font-weight:600;">${i.name}</td><td><span class="unit-pill">${fmtNum(i.qty)} ${i.unit}</span></td><td style="text-align:right;">${fmtCurrency(i.unitCost)}</td><td style="text-align:right;font-weight:700;">${fmtCurrency(i.total)}</td></tr>`).join('');
-    return `<div class="tbl-wrap" style="margin-bottom:14px;">
-      <table>
-        <thead><tr><th colspan="4" style="background:#fff;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <div><span class="badge badge-ok">${fmtDate(g.date)}</span> <strong style="margin-left:6px;">${g.supplier}</strong></div>
-            <span style="font-weight:800;color:var(--success);">${fmtCurrency(g.grandTotal)}</span>
-          </div>
-        </th></tr><tr><th>Item</th><th>Qty</th><th style="text-align:right;">Unit Cost</th><th style="text-align:right;">Total</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-  }).join('');
-}
-
-// ─────────────────────────────────────────────
-// NIGHT CLOSING
-// ─────────────────────────────────────────────
-function getGRNTodayForIng(ingId, date){
-  return grnRecords.filter(g=>g.date===date).reduce((sum,g)=>{
-    const item = g.items.find(i=>i.ingId===ingId);
-    return sum + (item ? item.qty : 0);
-  },0);
-}
-
-function generateClosingTable(){
-  const date = document.getElementById('cl-date').value || todayStr();
-  const tbody = document.getElementById('cl-tbody');
-  if(!ingredients.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mid);">Add ingredients first</td></tr>';
-    document.getElementById('cl-total').textContent = fmtCurrency(0);
-    return;
-  }
-  tbody.innerHTML = ingredients.map(ing=>{
-    const opening = safe(ing.currentStock);
-    const grnToday = getGRNTodayForIng(ing.id, date);
-    const available = opening + grnToday;
-    return `<tr data-ing="${ing.id}">
-      <td style="font-weight:600;">${ing.name}</td>
-      <td style="text-align:center;color:#1e40af;font-weight:600;">${fmtNum(opening)}</td>
-      <td style="text-align:center;color:var(--success);font-weight:600;">+${fmtNum(grnToday)}</td>
-      <td style="text-align:center;font-weight:800;" id="avail_${ing.id}">${fmtNum(available)}</td>
-      <td style="text-align:center;">
-        <input class="closing-input pos-input" type="number" step="0.001" min="0"
-               id="phys_${ing.id}" placeholder="${fmtNum(available)}"
-               oninput="calcClosingRow('${ing.id}')">
-      </td>
-      <td style="text-align:center;font-weight:900;color:var(--danger);" id="cons_${ing.id}">0.000</td>
-      <td style="text-align:right;font-weight:700;" id="cost_${ing.id}">—</td>
-    </tr>`;
-  }).join('');
-  updateClosingTotal();
-}
-
-function calcClosingRow(ingId){
-  const ing = ingredients.find(i=>i.id===ingId);
-  if(!ing) return;
-  const date = document.getElementById('cl-date').value || todayStr();
-  const opening = safe(ing.currentStock);
-  const grnToday = getGRNTodayForIng(ing.id, date);
-  const available = opening + grnToday;
-  const physEl = document.getElementById('phys_'+ingId);
-  const physical = physEl.value!=='' ? safe(physEl.value) : available;
-  const consumed = Math.max(0, available - physical);
-  const cost = consumed * safe(ing.costPerUnit);
-  document.getElementById('cons_'+ingId).textContent = fmtNum(consumed);
-  document.getElementById('cost_'+ingId).textContent = consumed>0 ? fmtCurrency(cost) : '—';
-  updateClosingTotal();
-}
-
-function updateClosingTotal(){
-  let total=0;
-  document.querySelectorAll('[id^="cost_"]').forEach(el=>{
-    if(el.textContent!=='—') total += parseFloat(el.textContent.replace('Rs ','').replace(/,/g,''))||0;
-  });
-  document.getElementById('cl-total').textContent = fmtCurrency(total);
-}
-
-function confirmClosing(){
-  if(!ingredients.length){ toast('Add ingredients first','err'); return; }
-  const date = document.getElementById('cl-date').value || todayStr();
-  const closedBy = document.getElementById('cl-by').value.trim();
-  if(!closedBy){ toast('Enter who closed tonight','err'); return; }
-
-  const items = [];
-  let totalCost = 0;
-  ingredients.forEach(ing=>{
-    const opening = safe(ing.currentStock);
-    const grnToday = getGRNTodayForIng(ing.id, date);
-    const available = opening + grnToday;
-    const physEl = document.getElementById('phys_'+ing.id);
-    const physical = physEl && physEl.value!=='' ? safe(physEl.value) : available;
-    const consumed = Math.max(0, available - physical);
-    const cost = consumed * safe(ing.costPerUnit);
-    totalCost += cost;
-    items.push({ingId:ing.id, name:ing.name, unit:ing.unit, opening, grnToday, available, physical, consumed, costPerUnit:ing.costPerUnit, cost});
-    ing.currentStock = physical; // tomorrow's opening
-  });
-
-  closings.unshift({id:uid(), date, closedBy, items, totalCost});
-
-  document.getElementById('cl-by').value='';
-  renderIngredients();
-  generateClosingTable();
-  renderClosingList();
-  toast(`🌙 Closing saved · ${fmtCurrency(totalCost)} consumed`);
-}
-
-function renderClosingList(){
-  const cont = document.getElementById('closing-list');
-  if(!closings.length){
-    cont.innerHTML = '<div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div>';
-    return;
-  }
-  cont.innerHTML = closings.map(c=>{
-    const consumedItems = c.items.filter(i=>i.consumed>0);
-    const rows = consumedItems.map(i=>`<tr><td style="font-weight:600;">${i.name}</td><td><span class="unit-pill">${fmtNum(i.consumed)} ${i.unit}</span></td><td style="text-align:right;font-weight:700;">${fmtCurrency(i.cost)}</td></tr>`).join('');
-    return `<div class="tbl-wrap" style="margin-bottom:14px;">
-      <table>
-        <thead><tr><th colspan="3" style="background:#fff;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <div><span class="badge badge-info">${fmtDate(c.date)}</span> <strong style="margin-left:6px;">${c.closedBy}</strong></div>
-            <span style="font-weight:800;color:var(--danger);">${fmtCurrency(c.totalCost)}</span>
-          </div>
-        </th></tr>${consumedItems.length?'<tr><th>Ingredient</th><th>Consumed</th><th style="text-align:right;">Cost</th></tr>':''}</thead>
-        <tbody>${consumedItems.length?rows:'<tr><td colspan="3" style="text-align:center;color:var(--mid);padding:16px;">Nothing consumed</td></tr>'}</tbody>
-      </table>
-    </div>`;
-  }).join('');
-}
-
-// ─────────────────────────────────────────────
-// CONSUMPTION
-// ─────────────────────────────────────────────
-function renderConsumption(){
-  document.getElementById('cs-days').textContent = closings.length;
-  const totalCost = closings.reduce((s,c)=>s+c.totalCost,0);
-  document.getElementById('cs-total').textContent = fmtCurrency(totalCost);
-  document.getElementById('cs-avg').textContent = fmtCurrency(closings.length? totalCost/closings.length : 0);
-
-  const map = {};
-  closings.forEach(c=>{
-    c.items.filter(i=>i.consumed>0).forEach(i=>{
-      if(!map[i.name]) map[i.name] = {name:i.name, unit:i.unit, totalConsumed:0, totalCost:0, closings:new Set(), cpuSum:0, cpuCount:0};
-      map[i.name].totalConsumed += i.consumed;
-      map[i.name].totalCost += i.cost;
-      map[i.name].closings.add(c.id);
-      if(i.costPerUnit>0){ map[i.name].cpuSum += i.costPerUnit; map[i.name].cpuCount++; }
-    });
-  });
-  const rows = Object.values(map).sort((a,b)=>b.totalCost-a.totalCost);
-  document.getElementById('cs-top').textContent = rows.length ? rows[0].name : '—';
-
-  const tbody = document.getElementById('cons-tbody');
-  if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mid);">No consumption recorded yet</td></tr>';
-  } else {
-    tbody.innerHTML = rows.map(r=>{
-      const avgCpu = r.cpuCount>0 ? r.cpuSum/r.cpuCount : 0;
-      const pct = totalCost>0 ? (r.totalCost/totalCost*100).toFixed(1) : '0.0';
-      return `<tr>
-        <td style="font-weight:700;">${r.name}</td>
-        <td style="text-align:right;font-weight:700;">${fmtNum(r.totalConsumed)}</td>
-        <td><span class="unit-pill">${r.unit}</span></td>
-        <td style="text-align:right;color:var(--mid);">${fmtCurrency(avgCpu)}</td>
-        <td style="text-align:right;font-weight:800;color:var(--danger);">${fmtCurrency(r.totalCost)}</td>
-        <td style="text-align:right;"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${pct}%</span></td>
-        <td style="color:var(--mid);font-size:12px;">${r.closings.size}</td>
-      </tr>`;
-    }).join('');
-  }
-
-  const dayTbody = document.getElementById('cons-day-tbody');
-  if(!closings.length){
-    dayTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--mid);">No closings yet</td></tr>';
-  } else {
-    dayTbody.innerHTML = closings.map(c=>{
-      const n = c.items.filter(i=>i.consumed>0).length;
-      return `<tr>
-        <td><span class="badge badge-info">${fmtDate(c.date)}</span></td>
-        <td>${c.closedBy}</td>
-        <td style="text-align:right;font-weight:700;">${n}</td>
-        <td style="text-align:right;font-weight:800;color:var(--danger);">${fmtCurrency(c.totalCost)}</td>
-      </tr>`;
-    }).join('');
-  }
-}
-
-// ─────────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('grn-date').value = todayStr();
-  document.getElementById('cl-date').value = todayStr();
-  document.getElementById('cl-date').addEventListener('change', generateClosingTable);
-  document.getElementById('grn-date').addEventListener('change', ()=>{ /* affects which GRN counts as "today" for closing */ });
-  renderIngredients();
-  addGRNRow();
-  generateClosingTable();
-});
-</script>
 </body>
 </html>
