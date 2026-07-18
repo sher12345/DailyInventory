@@ -1,1 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crustify — Inventory Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --red:#8b0000; --red-bright:#c81010; --gold:#ffd700; --gold-dk:#e6b800;
+  --success:#059669; --warning:#d97706; --danger:#dc2626; --info:#2563eb;
+  --dark:#111827; --mid:#6b7280; --light:#f3f4f6; --border:#e5e7eb;
+  --radius:14px; --radius-sm:8px; --shadow:0 2px 12px rgba(0,0,0,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f8f9fb;color:var(--dark);font-size:14px;line-height:1.5;padding-bottom:60px;}
+h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;}
 
+.header{
+  background:linear-gradient(135deg,var(--red) 0%,var(--red-bright) 60%,#f37021 100%);
+  padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(139,0,0,.3);
+}
+.header h1{color:#fff;font-size:20px;letter-spacing:-.4px;}
+.header .sub{color:rgba(255,215,0,.8);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:2px;}
+.reset-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,215,0,.35);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.reset-btn:hover{background:rgba(255,255,255,.25);}
+
+.nav{background:#fff;border-bottom:2px solid var(--border);padding:0 24px;position:sticky;top:66px;z-index:90;overflow-x:auto;}
+.nav-inner{display:flex;max-width:1200px;margin:0 auto;}
+.nav-btn{padding:14px 18px;border:none;background:transparent;font-weight:700;font-size:13px;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px;}
+.nav-btn:hover{color:var(--red);}
+.nav-btn.active{color:var(--red);border-bottom-color:var(--gold);}
+
+.main{max-width:1200px;margin:0 auto;padding:24px;}
+.tab{display:none;}
+.tab.active{display:block;}
+
+.card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.card-title{font-size:16px;font-weight:700;}
+.card-title i{color:var(--red);margin-right:6px;}
+
+.btn{padding:9px 16px;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:filter .15s,transform .1s;}
+.btn:hover{filter:brightness(1.08);}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--red);color:#fff;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-outline{background:#fff;color:var(--dark);border:2px solid var(--border);}
+.btn-sm{padding:6px 11px;font-size:12px;}
+.btn-icon{width:32px;height:32px;padding:0;justify-content:center;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-weight:600;font-size:12px;margin-bottom:5px;color:var(--dark);}
+.form-input,.form-select{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;background:#fff;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--red);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:#f8f9fb;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mid);white-space:nowrap;}
+td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+
+.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;display:inline-block;white-space:nowrap;}
+.badge-ok{background:#d1fae5;color:#065f46;}
+.badge-warn{background:#fef3c7;color:#92400e;}
+.badge-bad{background:#fee2e2;color:#991b1b;}
+.badge-info{background:#dbeafe;color:#1e40af;}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.stat{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border-left:4px solid var(--border);}
+.stat.brand{border-left-color:var(--red);}
+.stat.ok{border-left-color:var(--success);}
+.stat.bad{border-left-color:var(--danger);}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mid);margin-bottom:6px;}
+.stat-val{font-size:22px;font-weight:800;}
+
+.empty{text-align:center;padding:50px 20px;color:var(--mid);}
+.empty i{font-size:44px;color:var(--border);display:block;margin-bottom:12px;}
+
+.unit-pill{background:#f3f4f6;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+.closing-input{width:100px;text-align:right;padding:6px 8px;border:2px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;}
+.closing-input:focus{outline:none;border-color:var(--red);}
+.closing-input.pos-input{border-color:#c81010;background:#fff0f0;}
+
+.grn-row-grid, .cl-row-note{display:grid;gap:6px;}
+.hint{font-size:12px;color:var(--mid);margin-bottom:12px;}
+.hint-box{font-size:12px;color:var(--mid);background:#f8f9fb;border-left:3px solid var(--border);padding:10px 14px;border-radius:6px;margin-top:12px;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:13px 20px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:all .3s ease;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:var(--danger);}
+
+.diff-badge{display:inline-block;padding:4px 9px;border-radius:8px;font-weight:800;font-size:12px;min-width:60px;text-align:center;border:2px solid transparent;}
+.diff-match{background:#d1fae5;color:#065f46;border-color:#a7f3d0;}
+.diff-over{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
+.diff-under{background:#e0f2fe;color:#075985;border-color:#bae6fd;}
+
+@media(max-width:768px){
+  .main{padding:16px;}
+  .form-row,.form-row-3{grid-template-columns:1fr;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <h1><i class="fas fa-calculator"></i> Crustify Calculator</h1>
+    <div class="sub">GRN · Night Closing · Consumption — no login, nothing saved to a server</div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()"><i class="fas fa-undo"></i> Reset everything</button>
+</header>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-tab="t-ingredients" onclick="switchTab(this)"><i class="fas fa-boxes"></i> Ingredients</button>
+    <button class="nav-btn" data-tab="t-grn" onclick="switchTab(this)"><i class="fas fa-truck-loading"></i> GRN</button>
+    <button class="nav-btn" data-tab="t-closing" onclick="switchTab(this)"><i class="fas fa-moon"></i> Night Closing</button>
+    <button class="nav-btn" data-tab="t-consumption" onclick="switchTab(this)"><i class="fas fa-fire"></i> Consumption</button>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- ============ INGREDIENTS (setup) ============ -->
+  <div id="t-ingredients" class="tab active">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-boxes"></i>Ingredients</span>
+      </div>
+      <p class="hint">Add every ingredient you want to track. Everything below (GRN, Night Closing, Consumption) works off this list — nothing here is saved anywhere, it only lives in this browser tab.</p>
+
+      <div class="form-row-3" style="align-items:end;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="ing-name" placeholder="e.g. Chicken Breast" onkeydown="if(event.key==='Enter')addIngredient()">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Unit</label>
+          <select class="form-select" id="ing-unit">
+            <option>kg</option><option>g</option><option>l</option><option>ml</option>
+            <option>pcs</option><option>pkt</option><option>box</option><option>bottle</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Cost / Unit (Rs)</label>
+          <input class="form-input" id="ing-cost" type="number" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter')addIngredient()">
+        </div>
+      </div>
+      <div class="form-row" style="align-items:end;margin-top:2px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Opening Stock (starting quantity you already have)</label>
+          <input class="form-input" id="ing-stock" type="number" step="0.001" placeholder="0.000" onkeydown="if(event.key==='Enter')addIngredient()">
+        </div>
+        <div class="form-group" style="margin:0;display:flex;align-items:end;">
+          <button class="btn btn-primary" style="width:100%;" onclick="addIngredient()"><i class="fas fa-plus"></i> Add Ingredient</button>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:16px;">
+        <table>
+          <thead><tr><th>Name</th><th>Unit</th><th style="text-align:right;">Cost/Unit</th><th style="text-align:right;">Current Stock</th><th style="text-align:right;">Stock Value</th><th></th></tr></thead>
+          <tbody id="ing-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GRN ============ -->
+  <div id="t-grn" class="tab">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-truck-loading"></i>New GRN (Goods Received)</span>
+      </div>
+      <p class="hint">Log what came in today. Confirming a GRN adds the quantity to that ingredient's current stock.</p>
+
+      <div class="form-row" style="margin-bottom:6px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="grn-date">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Supplier</label>
+          <input class="form-input" type="text" id="grn-supplier" placeholder="Supplier name">
+        </div>
+      </div>
+
+      <div style="margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center;">
+        <strong style="font-size:13px;">Items</strong>
+        <button class="btn btn-outline btn-sm" onclick="addGRNRow()"><i class="fas fa-plus"></i> Add Row</button>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;padding:8px;background:#f8f9fb;border-radius:8px;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;">
+        <div>Ingredient</div><div>Qty</div><div>Unit Cost</div><div>Total</div><div></div>
+      </div>
+      <div id="grn-rows"></div>
+
+      <div style="background:#f0fdf4;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:2px solid #d1fae5;margin-top:14px;">
+        <span style="font-size:13px;color:#059669;font-weight:600;">Grand Total</span>
+        <span id="grn-total" style="font-size:22px;font-weight:800;color:#059669;">Rs 0.00</span>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="confirmGRN()"><i class="fas fa-check"></i> Confirm GRN &amp; Add to Stock</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="fas fa-list"></i>GRN Records (this session)</span></div>
+      <div id="grn-list"><div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div></div>
+    </div>
+  </div>
+
+  <!-- ============ NIGHT CLOSING ============ -->
+  <div id="t-closing" class="tab">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-moon"></i>Night Closing — Physical Count</span>
+      </div>
+      <p class="hint">Available = opening stock + today's GRN. Enter what you actually counted — consumption and cost are calculated automatically. Leave blank to assume zero consumption.</p>
+
+      <div class="form-row" style="margin-bottom:6px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="cl-date">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Closed By</label>
+          <input class="form-input" type="text" id="cl-by" placeholder="Your name">
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Ingredient</th>
+              <th style="text-align:center;">Opening</th>
+              <th style="text-align:center;">GRN Today (+)</th>
+              <th style="text-align:center;">Available</th>
+              <th style="text-align:center;">Physical Count</th>
+              <th style="text-align:center;">Consumed</th>
+              <th style="text-align:right;">Cost</th>
+            </tr>
+          </thead>
+          <tbody id="cl-tbody"></tbody>
+        </table>
+      </div>
+
+      <div style="background:#fef2f2;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:2px solid #fecaca;margin-top:14px;">
+        <span style="font-size:13px;color:var(--danger);font-weight:600;">Total Consumption Cost</span>
+        <span id="cl-total" style="font-size:22px;font-weight:800;color:var(--danger);">Rs 0.00</span>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="confirmClosing()"><i class="fas fa-moon"></i> Confirm Night Closing</button>
+      <div class="hint-box">Confirming sets each ingredient's current stock to the physical count you entered — that becomes tomorrow's opening stock.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="fas fa-history"></i>Closing History (this session)</span></div>
+      <div id="closing-list"><div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div></div>
+    </div>
+  </div>
+
+  <!-- ============ CONSUMPTION ============ -->
+  <div id="t-consumption" class="tab">
+    <div class="stats">
+      <div class="stat brand"><div class="stat-label">Closings Recorded</div><div class="stat-val" id="cs-days">0</div></div>
+      <div class="stat bad"><div class="stat-label">Total Consumption Cost</div><div class="stat-val" id="cs-total">Rs 0.00</div></div>
+      <div class="stat"><div class="stat-label">Avg per Closing</div><div class="stat-val" id="cs-avg">Rs 0.00</div></div>
+      <div class="stat ok"><div class="stat-label">Top Ingredient</div><div class="stat-val" id="cs-top" style="font-size:14px;padding-top:4px;">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="fas fa-fire"></i>Consumption by Ingredient</span></div>
+      <p class="hint">Totals across every Night Closing confirmed in this session.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ingredient</th>
+              <th style="text-align:right;">Total Consumed</th>
+              <th>Unit</th>
+              <th style="text-align:right;">Avg Cost/Unit</th>
+              <th style="text-align:right;">Total Cost</th>
+              <th style="text-align:right;">% of Total</th>
+              <th>Closings</th>
+            </tr>
+          </thead>
+          <tbody id="cons-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="fas fa-calendar-day"></i>Consumption by Day</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Closed By</th><th style="text-align:right;">Items Consumed</th><th style="text-align:right;">Total Cost</th></tr></thead>
+          <tbody id="cons-day-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE — everything lives only in this tab's memory
+// ─────────────────────────────────────────────
+let ingredients = [];   // {id, name, unit, costPerUnit, currentStock}
+let grnRecords  = [];   // {id, date, supplier, items:[{ingId,name,unit,qty,unitCost,total}], grandTotal}
+let closings    = [];   // {id, date, closedBy, items:[{ingId,name,unit,opening,grnToday,available,physical,consumed,costPerUnit,cost}], totalCost}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function safe(v,d=0){ const n=parseFloat(v); return isNaN(n)?d:n; }
+function fmtCurrency(n){ return 'Rs ' + (safe(n)).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtNum(n,dp=3){ return safe(n).toFixed(dp); }
+function fmtDate(d){ if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'}); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+let _toastTimer=null;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast'), m=document.getElementById('toast-msg');
+  m.textContent=msg;
+  el.className='toast show'+(type==='err'?' err':'');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+function switchTab(btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.tab).classList.add('active');
+  if(btn.dataset.tab==='t-grn') renderGRNIngredientOptions();
+  if(btn.dataset.tab==='t-closing') generateClosingTable();
+  if(btn.dataset.tab==='t-consumption') renderConsumption();
+}
+
+function resetAll(){
+  if(!confirm('Clear all ingredients, GRN records and closings? This cannot be undone.')) return;
+  ingredients=[]; grnRecords=[]; closings=[];
+  renderIngredients();
+  document.getElementById('grn-rows').innerHTML='';
+  document.getElementById('grn-list').innerHTML='<div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div>';
+  document.getElementById('closing-list').innerHTML='<div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div>';
+  addGRNRow();
+  generateClosingTable();
+  renderConsumption();
+  toast('Everything cleared');
+}
+
+// ─────────────────────────────────────────────
+// INGREDIENTS
+// ─────────────────────────────────────────────
+function addIngredient(){
+  const name = document.getElementById('ing-name').value.trim();
+  if(!name){ toast('Enter an ingredient name','err'); return; }
+  const rec = {
+    id: uid(), name,
+    unit: document.getElementById('ing-unit').value,
+    costPerUnit: safe(document.getElementById('ing-cost').value),
+    currentStock: safe(document.getElementById('ing-stock').value)
+  };
+  ingredients.push(rec);
+  ingredients.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('ing-name').value='';
+  document.getElementById('ing-cost').value='';
+  document.getElementById('ing-stock').value='';
+  document.getElementById('ing-name').focus();
+  renderIngredients();
+  toast('✅ '+name+' added');
+}
+
+function removeIngredient(id){
+  const ing = ingredients.find(i=>i.id===id);
+  if(!ing) return;
+  if(!confirm('Remove "'+ing.name+'"? This won\'t affect GRN or closings already recorded.')) return;
+  ingredients = ingredients.filter(i=>i.id!==id);
+  renderIngredients();
+}
+
+function renderIngredients(){
+  const tbody = document.getElementById('ing-tbody');
+  if(!ingredients.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--mid);">No ingredients added yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = ingredients.map(i=>{
+    const val = safe(i.currentStock)*safe(i.costPerUnit);
+    return `<tr>
+      <td style="font-weight:600;">${i.name}</td>
+      <td><span class="unit-pill">${i.unit}</span></td>
+      <td style="text-align:right;">${fmtCurrency(i.costPerUnit)}</td>
+      <td style="text-align:right;font-weight:700;">${fmtNum(i.currentStock)}</td>
+      <td style="text-align:right;">${fmtCurrency(val)}</td>
+      <td><button class="btn btn-sm btn-icon" style="background:#fee2e2;color:#991b1b;" onclick="removeIngredient('${i.id}')"><i class="fas fa-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// GRN
+// ─────────────────────────────────────────────
+function ingredientOptionsHTML(selectedId){
+  return '<option value="">Select ingredient</option>' + ingredients.map(i=>
+    `<option value="${i.id}" data-unit="${i.unit}" data-cost="${i.costPerUnit}"${i.id===selectedId?' selected':''}>${i.name} (${i.unit})</option>`
+  ).join('');
+}
+
+function renderGRNIngredientOptions(){
+  document.querySelectorAll('#grn-rows .grn-sel').forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML = ingredientOptionsHTML(cur);
+  });
+}
+
+function addGRNRow(){
+  if(!ingredients.length){ toast('Add at least one ingredient first','err'); return; }
+  const row = document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;margin-top:6px;align-items:center;';
+  row.innerHTML = `
+    <select class="form-select grn-sel" onchange="grnRowChange(this)" style="font-size:12px;">${ingredientOptionsHTML('')}</select>
+    <input class="form-input grn-qty" type="number" step="0.001" placeholder="0.000" oninput="updateGRNRowTotal(this)" style="font-size:12px;text-align:right;">
+    <input class="form-input grn-ucost" type="number" step="0.01" placeholder="0.00" oninput="updateGRNRowTotal(this)" style="font-size:12px;text-align:right;">
+    <div class="grn-line" style="font-weight:700;font-size:13px;text-align:right;padding-right:4px;">Rs 0.00</div>
+    <button class="btn btn-icon" style="background:#fee2e2;color:#991b1b;" onclick="removeGRNRow(this)"><i class="fas fa-trash"></i></button>
+  `;
+  document.getElementById('grn-rows').appendChild(row);
+}
+
+function grnRowChange(sel){
+  const ing = ingredients.find(i=>i.id===sel.value);
+  if(ing){
+    const row = sel.closest('div');
+    row.querySelector('.grn-ucost').value = ing.costPerUnit;
+    updateGRNRowTotal(row.querySelector('.grn-qty'));
+  }
+}
+function updateGRNRowTotal(inp){
+  const row = inp.closest('div');
+  const qty = safe(row.querySelector('.grn-qty').value);
+  const ucost = safe(row.querySelector('.grn-ucost').value);
+  row.querySelector('.grn-line').textContent = fmtCurrency(qty*ucost);
+  updateGRNGrandTotal();
+}
+function removeGRNRow(btn){
+  const rows = document.querySelectorAll('#grn-rows > div');
+  if(rows.length<=1){ toast('Need at least one row','err'); return; }
+  btn.closest('div').remove();
+  updateGRNGrandTotal();
+}
+function updateGRNGrandTotal(){
+  let total=0;
+  document.querySelectorAll('#grn-rows .grn-line').forEach(el=>{
+    total += parseFloat(el.textContent.replace('Rs ','').replace(/,/g,''))||0;
+  });
+  document.getElementById('grn-total').textContent = fmtCurrency(total);
+}
+
+function confirmGRN(){
+  const date = document.getElementById('grn-date').value || todayStr();
+  const supplier = document.getElementById('grn-supplier').value.trim();
+  if(!supplier){ toast('Enter a supplier name','err'); return; }
+
+  const rows = document.querySelectorAll('#grn-rows > div');
+  const items = [];
+  rows.forEach(row=>{
+    const ingId = row.querySelector('.grn-sel').value;
+    const qty = safe(row.querySelector('.grn-qty').value);
+    const ucost = safe(row.querySelector('.grn-ucost').value);
+    if(!ingId || qty<=0) return;
+    const ing = ingredients.find(i=>i.id===ingId);
+    if(!ing) return;
+    items.push({ingId, name:ing.name, unit:ing.unit, qty, unitCost:ucost, total:qty*ucost});
+  });
+  if(!items.length){ toast('Add at least one item with a quantity','err'); return; }
+
+  const grandTotal = items.reduce((s,i)=>s+i.total,0);
+  grnRecords.unshift({id:uid(), date, supplier, items, grandTotal});
+
+  // add qty to stock, weighted-average the cost
+  items.forEach(it=>{
+    const ing = ingredients.find(i=>i.id===it.ingId);
+    if(!ing) return;
+    const oldStock = safe(ing.currentStock), oldCost = safe(ing.costPerUnit);
+    const totalQty = oldStock + it.qty;
+    ing.costPerUnit = totalQty>0 ? ((oldStock*oldCost)+(it.qty*it.unitCost))/totalQty : it.unitCost;
+    ing.currentStock = totalQty;
+  });
+
+  document.getElementById('grn-supplier').value='';
+  document.getElementById('grn-rows').innerHTML='';
+  addGRNRow();
+  updateGRNGrandTotal();
+  renderIngredients();
+  renderGRNList();
+  toast(`✅ GRN saved · ${items.length} items · ${fmtCurrency(grandTotal)}`);
+}
+
+function renderGRNList(){
+  const cont = document.getElementById('grn-list');
+  if(!grnRecords.length){
+    cont.innerHTML = '<div class="empty"><i class="fas fa-truck"></i><p>No GRN recorded yet</p></div>';
+    return;
+  }
+  cont.innerHTML = grnRecords.map(g=>{
+    const rows = g.items.map(i=>`<tr><td style="font-weight:600;">${i.name}</td><td><span class="unit-pill">${fmtNum(i.qty)} ${i.unit}</span></td><td style="text-align:right;">${fmtCurrency(i.unitCost)}</td><td style="text-align:right;font-weight:700;">${fmtCurrency(i.total)}</td></tr>`).join('');
+    return `<div class="tbl-wrap" style="margin-bottom:14px;">
+      <table>
+        <thead><tr><th colspan="4" style="background:#fff;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div><span class="badge badge-ok">${fmtDate(g.date)}</span> <strong style="margin-left:6px;">${g.supplier}</strong></div>
+            <span style="font-weight:800;color:var(--success);">${fmtCurrency(g.grandTotal)}</span>
+          </div>
+        </th></tr><tr><th>Item</th><th>Qty</th><th style="text-align:right;">Unit Cost</th><th style="text-align:right;">Total</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// NIGHT CLOSING
+// ─────────────────────────────────────────────
+function getGRNTodayForIng(ingId, date){
+  return grnRecords.filter(g=>g.date===date).reduce((sum,g)=>{
+    const item = g.items.find(i=>i.ingId===ingId);
+    return sum + (item ? item.qty : 0);
+  },0);
+}
+
+function generateClosingTable(){
+  const date = document.getElementById('cl-date').value || todayStr();
+  const tbody = document.getElementById('cl-tbody');
+  if(!ingredients.length){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mid);">Add ingredients first</td></tr>';
+    document.getElementById('cl-total').textContent = fmtCurrency(0);
+    return;
+  }
+  tbody.innerHTML = ingredients.map(ing=>{
+    const opening = safe(ing.currentStock);
+    const grnToday = getGRNTodayForIng(ing.id, date);
+    const available = opening + grnToday;
+    return `<tr data-ing="${ing.id}">
+      <td style="font-weight:600;">${ing.name}</td>
+      <td style="text-align:center;color:#1e40af;font-weight:600;">${fmtNum(opening)}</td>
+      <td style="text-align:center;color:var(--success);font-weight:600;">+${fmtNum(grnToday)}</td>
+      <td style="text-align:center;font-weight:800;" id="avail_${ing.id}">${fmtNum(available)}</td>
+      <td style="text-align:center;">
+        <input class="closing-input pos-input" type="number" step="0.001" min="0"
+               id="phys_${ing.id}" placeholder="${fmtNum(available)}"
+               oninput="calcClosingRow('${ing.id}')">
+      </td>
+      <td style="text-align:center;font-weight:900;color:var(--danger);" id="cons_${ing.id}">0.000</td>
+      <td style="text-align:right;font-weight:700;" id="cost_${ing.id}">—</td>
+    </tr>`;
+  }).join('');
+  updateClosingTotal();
+}
+
+function calcClosingRow(ingId){
+  const ing = ingredients.find(i=>i.id===ingId);
+  if(!ing) return;
+  const date = document.getElementById('cl-date').value || todayStr();
+  const opening = safe(ing.currentStock);
+  const grnToday = getGRNTodayForIng(ing.id, date);
+  const available = opening + grnToday;
+  const physEl = document.getElementById('phys_'+ingId);
+  const physical = physEl.value!=='' ? safe(physEl.value) : available;
+  const consumed = Math.max(0, available - physical);
+  const cost = consumed * safe(ing.costPerUnit);
+  document.getElementById('cons_'+ingId).textContent = fmtNum(consumed);
+  document.getElementById('cost_'+ingId).textContent = consumed>0 ? fmtCurrency(cost) : '—';
+  updateClosingTotal();
+}
+
+function updateClosingTotal(){
+  let total=0;
+  document.querySelectorAll('[id^="cost_"]').forEach(el=>{
+    if(el.textContent!=='—') total += parseFloat(el.textContent.replace('Rs ','').replace(/,/g,''))||0;
+  });
+  document.getElementById('cl-total').textContent = fmtCurrency(total);
+}
+
+function confirmClosing(){
+  if(!ingredients.length){ toast('Add ingredients first','err'); return; }
+  const date = document.getElementById('cl-date').value || todayStr();
+  const closedBy = document.getElementById('cl-by').value.trim();
+  if(!closedBy){ toast('Enter who closed tonight','err'); return; }
+
+  const items = [];
+  let totalCost = 0;
+  ingredients.forEach(ing=>{
+    const opening = safe(ing.currentStock);
+    const grnToday = getGRNTodayForIng(ing.id, date);
+    const available = opening + grnToday;
+    const physEl = document.getElementById('phys_'+ing.id);
+    const physical = physEl && physEl.value!=='' ? safe(physEl.value) : available;
+    const consumed = Math.max(0, available - physical);
+    const cost = consumed * safe(ing.costPerUnit);
+    totalCost += cost;
+    items.push({ingId:ing.id, name:ing.name, unit:ing.unit, opening, grnToday, available, physical, consumed, costPerUnit:ing.costPerUnit, cost});
+    ing.currentStock = physical; // tomorrow's opening
+  });
+
+  closings.unshift({id:uid(), date, closedBy, items, totalCost});
+
+  document.getElementById('cl-by').value='';
+  renderIngredients();
+  generateClosingTable();
+  renderClosingList();
+  toast(`🌙 Closing saved · ${fmtCurrency(totalCost)} consumed`);
+}
+
+function renderClosingList(){
+  const cont = document.getElementById('closing-list');
+  if(!closings.length){
+    cont.innerHTML = '<div class="empty"><i class="fas fa-moon"></i><p>No closings recorded yet</p></div>';
+    return;
+  }
+  cont.innerHTML = closings.map(c=>{
+    const consumedItems = c.items.filter(i=>i.consumed>0);
+    const rows = consumedItems.map(i=>`<tr><td style="font-weight:600;">${i.name}</td><td><span class="unit-pill">${fmtNum(i.consumed)} ${i.unit}</span></td><td style="text-align:right;font-weight:700;">${fmtCurrency(i.cost)}</td></tr>`).join('');
+    return `<div class="tbl-wrap" style="margin-bottom:14px;">
+      <table>
+        <thead><tr><th colspan="3" style="background:#fff;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div><span class="badge badge-info">${fmtDate(c.date)}</span> <strong style="margin-left:6px;">${c.closedBy}</strong></div>
+            <span style="font-weight:800;color:var(--danger);">${fmtCurrency(c.totalCost)}</span>
+          </div>
+        </th></tr>${consumedItems.length?'<tr><th>Ingredient</th><th>Consumed</th><th style="text-align:right;">Cost</th></tr>':''}</thead>
+        <tbody>${consumedItems.length?rows:'<tr><td colspan="3" style="text-align:center;color:var(--mid);padding:16px;">Nothing consumed</td></tr>'}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// CONSUMPTION
+// ─────────────────────────────────────────────
+function renderConsumption(){
+  document.getElementById('cs-days').textContent = closings.length;
+  const totalCost = closings.reduce((s,c)=>s+c.totalCost,0);
+  document.getElementById('cs-total').textContent = fmtCurrency(totalCost);
+  document.getElementById('cs-avg').textContent = fmtCurrency(closings.length? totalCost/closings.length : 0);
+
+  const map = {};
+  closings.forEach(c=>{
+    c.items.filter(i=>i.consumed>0).forEach(i=>{
+      if(!map[i.name]) map[i.name] = {name:i.name, unit:i.unit, totalConsumed:0, totalCost:0, closings:new Set(), cpuSum:0, cpuCount:0};
+      map[i.name].totalConsumed += i.consumed;
+      map[i.name].totalCost += i.cost;
+      map[i.name].closings.add(c.id);
+      if(i.costPerUnit>0){ map[i.name].cpuSum += i.costPerUnit; map[i.name].cpuCount++; }
+    });
+  });
+  const rows = Object.values(map).sort((a,b)=>b.totalCost-a.totalCost);
+  document.getElementById('cs-top').textContent = rows.length ? rows[0].name : '—';
+
+  const tbody = document.getElementById('cons-tbody');
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mid);">No consumption recorded yet</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r=>{
+      const avgCpu = r.cpuCount>0 ? r.cpuSum/r.cpuCount : 0;
+      const pct = totalCost>0 ? (r.totalCost/totalCost*100).toFixed(1) : '0.0';
+      return `<tr>
+        <td style="font-weight:700;">${r.name}</td>
+        <td style="text-align:right;font-weight:700;">${fmtNum(r.totalConsumed)}</td>
+        <td><span class="unit-pill">${r.unit}</span></td>
+        <td style="text-align:right;color:var(--mid);">${fmtCurrency(avgCpu)}</td>
+        <td style="text-align:right;font-weight:800;color:var(--danger);">${fmtCurrency(r.totalCost)}</td>
+        <td style="text-align:right;"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${pct}%</span></td>
+        <td style="color:var(--mid);font-size:12px;">${r.closings.size}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const dayTbody = document.getElementById('cons-day-tbody');
+  if(!closings.length){
+    dayTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--mid);">No closings yet</td></tr>';
+  } else {
+    dayTbody.innerHTML = closings.map(c=>{
+      const n = c.items.filter(i=>i.consumed>0).length;
+      return `<tr>
+        <td><span class="badge badge-info">${fmtDate(c.date)}</span></td>
+        <td>${c.closedBy}</td>
+        <td style="text-align:right;font-weight:700;">${n}</td>
+        <td style="text-align:right;font-weight:800;color:var(--danger);">${fmtCurrency(c.totalCost)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('grn-date').value = todayStr();
+  document.getElementById('cl-date').value = todayStr();
+  document.getElementById('cl-date').addEventListener('change', generateClosingTable);
+  document.getElementById('grn-date').addEventListener('change', ()=>{ /* affects which GRN counts as "today" for closing */ });
+  renderIngredients();
+  addGRNRow();
+  generateClosingTable();
+});
+</script>
+</body>
+</html>
